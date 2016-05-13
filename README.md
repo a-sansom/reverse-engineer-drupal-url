@@ -1,6 +1,6 @@
 General outline of how to reverse engineer Drupal pages, to get information about node ID, content type etc, into a CSV.
 
-* Adjust site theme to insert <meta /> on each page, likely via a preprocess function, adding variables and then printing them in the various page.tpl.php files.
+* Adjust site theme to insert &lt;meta /> tags on each page, likely via a preprocess function, adding variables and then printing them in the various page.tpl.php files.
 
 * Create a text file of all the (absolute) URLs you want to obtain debug information for
 
