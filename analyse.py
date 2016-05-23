@@ -54,11 +54,8 @@ class WgetPageReader:
     """ Read the downloaded pages, hoover up info and write to CSV.
     """
     def process_pages(self):
-        # Generator for file names.
-        file_names = self.node_files()
- 
         # For each file...
-        for name in file_names:
+        for name in self.node_files():
             # Some kind of progress indicator
             print name
             # Make the soup
