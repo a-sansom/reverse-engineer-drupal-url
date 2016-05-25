@@ -15,23 +15,21 @@ class WgetPageReader:
     Example tags added to downloaded file(s):
 
     ...
-    <meta name="content_type" content="article" />
-    <meta name="node_id" content="12345" />
-    <meta name="node_url" content="http://example.org/a/b/c" />
-    <meta name="uri" content="/a/b/c" />
-    <meta name="absolute_uri" content="http://example.org/a/b/c" />
-    <meta name="template" content="page.tpl.php" />
+    <div class="" style="display: none;">
+      <div class="debug-data-item" data-name="content_type" data-value="article"></div>
+      <div class="debug-data-item" data-name="node_id" data-value="12345"></div>
+      <div class="debug-data-item" data-name="node_url" data-value="http://example.org/a/b/c"></div>
+      <div class="debug-data-item" data-name="uri" data-value="/a/b/c"></div>
+      <div class="debug-data-item" data-name="absolute_uri" data-value="http://example.org/a/b/c"></div>
+    </div>
+    <div class="debug-data-item" style="display: none;" data-name="template" data-value="page.tpl.php"></div>
     ...
 
     The resulting 'nodes.csv' file contains rows in the format:
 
     <node_id>,<node_url>,<content_type>,<template>,<uri>,<absolute_uri>
 
-    Prerequisites:
-
-    sudo apt-get install python-bs4
-
-    Developed with Python 2.7.3
+    Developed with Python 2.7.3 and BeautifulSoup 4.4.1
     """
 
     def __init__(self, datestamp, timestamp):
@@ -58,9 +56,10 @@ class WgetPageReader:
             # Some kind of progress indicator
             print name
             # Make the soup
-            soup = BeautifulSoup(open(name))
+            soup = BeautifulSoup(open(name), 'lxml')
             # Get the debug tags
-            tags = soup.find_all(self.meta_tag_filter)
+            tags = soup.find_all(self.debug_tag_filter)
+
             # Accrue node data we're interested in
             node = self.format_page_data(name, tags)
 
@@ -82,31 +81,31 @@ class WgetPageReader:
         node['file'] = name
 
         for tag in tags:
-            if tag['name'] == 'node_id':
-                node['node_id'] = tag['content']
+            if tag['data-name'] == 'node_id':
+                node['node_id'] = tag['data-value']
 
-            elif tag['name'] == 'node_url':
-                node['node_url'] = tag['content']
+            elif tag['data-name'] == 'node_url':
+                node['node_url'] = tag['data-value']
 
-            elif tag['name'] == 'content_type':
-                node['content_type'] = tag['content']
+            elif tag['data-name'] == 'content_type':
+                node['content_type'] = tag['data-value']
 
-            elif tag['name'] == 'template':
-                node['template'] = tag['content']
+            elif tag['data-name'] == 'template':
+                node['template'] = tag['data-value']
 
-            elif tag['name'] == 'uri':
-                node['uri'] = tag['content']
+            elif tag['data-name'] == 'uri':
+                node['uri'] = tag['data-value']
 
-            elif tag['name'] == 'absolute_uri':
-                node['absolute_uri'] = tag['content']
+            elif tag['data-name'] == 'absolute_uri':
+                node['absolute_uri'] = tag['data-value']
 
         return node
 
-    def meta_tag_filter(self, tag):
+    def debug_tag_filter(self, tag):
         """Identify if we're interested in a particular tag."""
-        if tag.name == 'meta':
-            if tag.has_attr('name') and tag.has_attr('content'):
-                if tag['name'] in self.debug_tag_names:
+        if tag.name == 'div':
+            if tag.has_attr('class') and tag.has_attr('data-name') and tag.has_attr('data-value'):
+                if 'debug-data-item' in tag['class'] and tag['data-name'] in self.debug_tag_names:
                     return True
 
         return False
@@ -175,7 +174,7 @@ class WgetPageReader:
 
             print '{0:50}: {1}'.format(content_type, count)
 
-        print 'Total pages: {0}'.format(page_count)
+        print '{0:50}: {1}'.format('Total pages', page_count)
 
 if __name__ == "__main__":
     """ Retrieve debug info from wget downloaded pages into a CSV file.
@@ -190,7 +189,7 @@ if __name__ == "__main__":
 
     Usage:
 
-        python analyse.py 20160509 150745
+        python analyse.py 20160525 112610
     """
 
     datestamp = sys.argv[1]
