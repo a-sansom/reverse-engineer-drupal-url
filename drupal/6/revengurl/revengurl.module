@@ -1,0 +1,162 @@
+<?php
+/**
+ * @file
+ * Main module file.
+ *
+ * This module adds debugging information to all pages that print the Drupal 
+ * $closure variable.
+ *
+ * This module is for debug purposes only and should never be used on a
+ * production site.
+ *
+ * IF YOU DO NOT OUTPUT THE $closure VARIABLE IN YOUR THEME page.tpl.php (and
+ * specialised versions of), YOU WILL NOT SEE ANY DEBUG INFORMATION.
+ *
+ * Ideally the module would also automatically add output detailing the name of
+ * the used page .tpl.php file too (as the Drupal 7 version does). But, seeing
+ * as the last possible place to run the theme template 'discovery' is in a
+ * THEMENAME_preprocess_HOOK() function, it wouldn't be accurate if we tried to
+ * do that here, as subsequent code could add further template suggestions after
+ * us.
+ *
+ * A (less than ideal) work around to this is to edit the site/theme
+ * poge(-*).tpl.php template(s) and add another debug tag in same format as the
+ * rest added by this module:
+ *
+ * <div
+ *   class="debug-data-item"
+ *   style="display: none;"
+ *   data-name="template"
+ *   data-value="<?php print substr(strrchr(__FILE__, '/'), 1); ?>"
+ * ></div>
+ *
+ * When evaluated, the code above will output the name of the template that was
+ * called.
+ *
+ * If you then use the Python analyse.py script, that info will also be
+ * picked up and used in its output. The analyse.py script relies on the debug
+ * tag having a @class value of 'debug-data-item'.
+ */
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function revengurl_preprocess_page(&$vars) {
+  $markup = '<div class="revengurl-debug-data" style="display: none;">';
+  $markup .= revengurl_generate_debug_markup($vars);
+  $markup .= '</div>';
+
+  $vars['closure'] .= $markup;
+}
+
+/**
+ * Generate the debug markup.
+ */
+function revengurl_generate_debug_markup($vars) {
+  $markup = '';
+
+  $ids = array(
+    'content_type',
+    'node_id',
+    'node_url',
+    'uri',
+    'absolute_uri',
+  );
+
+  foreach ($ids as $id) {
+    $function = "revengurl_{$id}_markup";
+
+    if (function_exists($function)) {
+      $markup .= $function($id, $vars);
+    }
+  }
+
+  return $markup;
+}
+
+/**
+ * Generate the debug markup for the Drupal content type.
+ */
+function revengurl_content_type_markup($markup_item_id, $vars) {
+  $markup_item_value = 'CONTENT_TYPE_UNKNOWN';
+  $page_manager_page = '';
+
+  if (module_exists('page_manager')) {
+    $page_manager_page = page_manager_get_current_page();
+  }
+
+  // If content is node based we get a Drupal content type.
+  if (!empty($vars['node']->type)) {
+    $markup_item_value = $vars['node']->type;
+  }
+  // If content is created via CTools page manager, indicate this as a full
+  // Drupal content type is not then available.
+  elseif (!empty($page_manager_page)) {
+    $markup_item_value = 'page_manager:' . $page_manager_page['name'];
+  }
+  else {
+    // Just indicate how the content is being produced by looking up the path.
+    // This is just a catch all so we can see pages that are *possibly* just
+    // standard menu items that may've been created via hook_menu()
+    // implementations.
+    $menu_item = menu_get_item($_GET['q']);
+    $markup_item_value = 'menu:' . $menu_item['page_callback'] . '()';
+  }
+
+  return revengurl_tag_markup($markup_item_id, $markup_item_value);
+}
+
+/**
+ * Generate the debug markup for the Drupal node ID.
+ */
+function revengurl_node_id_markup($markup_item_id, $vars) {
+  $markup_item_value = 0;
+
+  if (isset($vars['node']->nid)) {
+    $markup_item_value = $vars['node']->nid;
+  }
+
+  return revengurl_tag_markup($markup_item_id, $markup_item_value);
+}
+
+/**
+ * Generate the debug markup for the Drupal node URL.
+ */
+function revengurl_node_url_markup($markup_item_id, $vars) {
+  $markup_item_value = '';
+
+  if (isset($vars['node']->nid)) {
+    $markup_item_value = url(
+      'node/' . $vars['node']->nid,
+      array('absolute' => TRUE)
+    );
+  }
+
+  return revengurl_tag_markup($markup_item_id, $markup_item_value);
+}
+
+/**
+ * Generate the debug markup for the current partial URI.
+ */
+function revengurl_uri_markup($markup_item_id, $vars) {
+  $markup_item_value = request_uri();
+
+  return revengurl_tag_markup($markup_item_id, $markup_item_value);
+}
+
+/**
+ * Generate the debug markup for the current absolute URI.
+ */
+function revengurl_absolute_uri_markup($markup_item_id, $vars) {
+  $path = isset($_GET['q']) ? $_GET['q'] : '<front>';
+  $markup_item_value = url($path, array('absolute' => TRUE));
+
+  return revengurl_tag_markup($markup_item_id, $markup_item_value);
+}
+
+/**
+ * Generate a single piece of debug markup.
+ */
+function revengurl_tag_markup($markup_item_id, $markup_item_value) {
+  return '<div class="debug-data-item" data-name="' . $markup_item_id . '" data-value="' . $markup_item_value . '"></div>';
+}

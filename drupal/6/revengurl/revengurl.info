@@ -1,0 +1,4 @@
+name = Reverse Engineer URLs
+description = Add info to the page enabling you to reverse engineer its detail
+core = 6.x
+package = Debug

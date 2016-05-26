@@ -1,0 +1,225 @@
+<?php
+/**
+ * @file
+ * Main module file.
+ *
+ * This module adds debugging information to all pages that print the Drupal
+ * $page_footer variable.
+ *
+ * This module is for debug purposes only and should never be used on a
+ * production site.
+ *
+ * IF YOU DO NOT OUTPUT THE $page_bottom VARIABLE IN YOUR THEME html.tpl.php,
+ * YOU WILL NOT SEE ANY DEBUG INFORMATION.
+ *
+ * If you wish to see debug info about which templates were used in rendering
+ * the visited page, you need to enable the 'theme_debug' variable (via Drush).
+ *
+ * Template debug information is output as a simple string of the name of the
+ * page .tpl.php file, or, if you set a variable 'revengurl_full_template_data'
+ * it is printed as a JSON string listing all of the .tpl.php files that make
+ * up the page.
+ */
+define('REVENGURL_UNKNOWN_CONTENT_TYPE', 'CONTENT_TYPE_UNKNOWN');
+define('REVENGURL_UNKNOWN_TEMPLATE', 'TEMPLATE_UNKNOWN');
+
+/**
+ * Implements hook_process_HOOK().
+ */
+function revengurl_process_html(&$vars) {
+  $vars['node'] = &drupal_static('revengurl_page_node');
+
+  $markup = '<div class="revengurl-debug-data" style="display: none;">';
+  $markup .= revengurl_generate_debug_markup($vars);
+  $markup .= '</div>';
+
+  // Append debug markup to the last thing rendered on the page.
+  $vars['page_bottom'] .= $markup;
+}
+
+/**
+ * Implements hook_process_HOOK().
+ */
+function revengurl_process_page(&$vars) {
+  $node = &drupal_static('revengurl_page_node');
+
+  if (!isset($node)) {
+    // If there's node info available for the page, make sure we have access to
+    // it in later functions during the same request by using the static cache.
+    $node = isset($vars['node']) ? $vars['node'] : NULL;
+  }
+}
+
+/**
+ * Generate the debug markup.
+ */
+function revengurl_generate_debug_markup($vars) {
+  $markup = '';
+
+  $ids = array(
+    'content_type',
+    'node_id',
+    'node_url',
+    'uri',
+    'absolute_uri',
+    'template',
+  );
+
+  foreach ($ids as $id) {
+    // Each property we're interested in has it's own function to determine its
+    // content. Some property values are going to be harder to determine than
+    // others, so we keep them separate to each other.
+    $function = "revengurl_{$id}_markup";
+
+    if (function_exists($function)) {
+      $markup .= $function($id, $vars);
+    }
+  }
+
+  return $markup;
+}
+
+/**
+ * Filter for empty array values.
+ */
+function revengurl_filter_is_empty($value) {
+  return !empty($value);
+}
+
+/**
+ * Generate the debug markup for the Drupal content type.
+ */
+function revengurl_content_type_markup($markup_item_id, $vars) {
+  $markup_item_value = REVENGURL_UNKNOWN_CONTENT_TYPE;
+  $page_manager_page = '';
+
+  if (module_exists('page_manager')) {
+    $page_manager_page = page_manager_get_current_page();
+  }
+
+  // If content is node based we get a Drupal content type.
+  if (!empty($vars['node']->type)) {
+    $markup_item_value = $vars['node']->type;
+  }
+  // If content is created via CTools page manager, indicate this as a full
+  // Drupal content type is not then available.
+  elseif (!empty($page_manager_page)) {
+    $markup_item_value = 'page_manager:' . $page_manager_page['name'];
+  }
+  else {
+    // Just indicate how the content is being produced by looking up the path.
+    // This is just a catch all so we can see pages that are *possibly* just
+    // standard menu items that may've been created via hook_menu()
+    // implementations.
+    $menu_item = menu_get_item($_GET['q']);
+    $markup_item_value = 'menu:' . $menu_item['page_callback'] . '()';
+  }
+
+  return revengurl_tag_markup($markup_item_id, $markup_item_value);
+}
+
+/**
+ * Generate the debug markup for the Drupal node ID.
+ */
+function revengurl_node_id_markup($markup_item_id, $vars) {
+  $markup_item_value = 0;
+
+  if (isset($vars['node']->nid)) {
+    $markup_item_value = $vars['node']->nid;
+  }
+
+  return revengurl_tag_markup($markup_item_id, $markup_item_value);
+}
+
+/**
+ * Generate the debug markup for the Drupal node URL.
+ */
+function revengurl_node_url_markup($markup_item_id, $vars) {
+  $markup_item_value = '';
+
+  if (isset($vars['node']->nid)) {
+    $markup_item_value = url(
+      'node/' . $vars['node']->nid,
+      array('absolute' => TRUE)
+    );
+  }
+
+  return revengurl_tag_markup($markup_item_id, $markup_item_value);
+}
+
+/**
+ * Generate the debug markup for the current partial URI.
+ */
+function revengurl_uri_markup($markup_item_id, $vars) {
+  $markup_item_value = request_uri();
+
+  return revengurl_tag_markup($markup_item_id, $markup_item_value);
+}
+
+/**
+ * Generate the debug markup for the current absolute URI.
+ */
+function revengurl_absolute_uri_markup($markup_item_id, $vars) {
+  $path = isset($_GET['q']) ? $_GET['q'] : '<front>';
+  $markup_item_value = url($path, array('absolute' => TRUE));
+
+  return revengurl_tag_markup($markup_item_id, $markup_item_value);
+}
+
+/**
+ * Generate the debug markup for page template.
+ *
+ * Use the 'theme_debug' output to generate debug info about templates used for
+ * the *page* generation.
+ */
+function revengurl_template_markup($markup_item_id, $vars) {
+  $markup_item_value = REVENGURL_UNKNOWN_TEMPLATE;
+  $markup = '';
+
+  if (variable_get('theme_debug', FALSE)) {
+    $re = "(<!-- CALL: theme\('(.+)'\) -->|<!-- BEGIN OUTPUT from '(.+)' -->)";
+
+    if (preg_match_all($re, $vars['page'], $results)) {
+      // Leave only RE matches in array.
+      $matches = array_slice($results, 1);
+
+      // Filter out the empty array items (the regex matches flip-flop)
+      for ($i = 0, $len = count($matches); $i < $len; $i++) {
+        $matches[$i] = array_values(array_filter($matches[$i], 'revengurl_filter_is_empty'));
+      }
+
+      // Collate the template info.
+      $templates = array();
+      for ($i = 0, $len = count($matches[0]); $i < $len; $i++) {
+        $templates[] = array($matches[0][$i], $matches[1][$i]);
+
+        // Default output.
+        if ($matches[0][$i] == 'page') {
+          $markup_item_value = substr(strrchr($matches[1][$i], '/'), 1);
+        }
+      }
+
+      if ($templates) {
+        // If required, output all of the templates used in the page generation
+        // (in a JSON format), rather than just the page template info.
+        if (variable_get('revengurl_full_template_data', FALSE)) {
+          $markup_item_value = json_encode($templates);
+        }
+
+        $markup .= revengurl_tag_markup($markup_item_id, $markup_item_value);
+      }
+    }
+  }
+  else {
+    $markup .= revengurl_tag_markup($markup_item_id, t('Enable theme_debug to output template debug data'));
+  }
+
+  return $markup;
+}
+
+/**
+ * Generate a single piece of debug markup.
+ */
+function revengurl_tag_markup($markup_item_id, $markup_item_value) {
+  return '<div class="debug-data-item" data-name="' . $markup_item_id . '" data-value="' . $markup_item_value . '"></div>';
+}
