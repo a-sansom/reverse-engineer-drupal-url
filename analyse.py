@@ -21,8 +21,8 @@ class WgetPageReader:
       <div class="debug-data-item" data-name="node_url" data-value="http://example.org/a/b/c"></div>
       <div class="debug-data-item" data-name="uri" data-value="/a/b/c"></div>
       <div class="debug-data-item" data-name="absolute_uri" data-value="http://example.org/a/b/c"></div>
+      <div class="debug-data-item" data-name="template" data-value="page.tpl.php"></div>
     </div>
-    <div class="debug-data-item" style="display: none;" data-name="template" data-value="page.tpl.php"></div>
     ...
 
     The resulting 'nodes.csv' file contains rows in the format:
