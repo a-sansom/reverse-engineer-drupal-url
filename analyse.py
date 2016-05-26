@@ -175,6 +175,7 @@ class WgetPageReader:
             print '{0:50}: {1}'.format(content_type, count)
 
         print '{0:50}: {1}'.format('Total pages', page_count)
+        print 'See output CSV in {}'.format(self.csv_output_path())
 
 if __name__ == "__main__":
     """ Retrieve debug info from wget downloaded pages into a CSV file.
