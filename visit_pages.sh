@@ -37,7 +37,8 @@ fi
 # Delay for 1 second between each request
 # Store the each request response in the $page_output_dir directory
 # --no-proxy ignores any environment proxies set up
-wget --no-proxy -a $log_file -i $input_file -t 5 -w 1 -P $page_output_dir
+# --load-cookies will use any valid, browser exported cookie in cookies.txt
+wget --no-proxy --load-cookies cookies.txt -a $log_file -i $input_file -t 5 -w 1 -P $page_output_dir
 
 # Show we're done
 echo "Finished at $(date +"%Y%m%d %H%M%S")"

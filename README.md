@@ -17,3 +17,12 @@ webform                                           : 123
 Total pages                                       : 188
 See output CSV in ./20160525/112610
 ```
+
+If you need to use a logged in Drupal user for various pages:
+
+* Open Firefox, and install the [Export Cookies](https://addons.mozilla.org/en-US/firefox/addon/export-cookies/) add-on
+* Clear existing cookies
+* Log in to the Drupal site
+* Export your cookies using the add-on
+* Overwrite the default (empty) `cookies.txt` file in this directory
+* Run the `visit_pages.sh` script as usual
