@@ -51,6 +51,12 @@ function revengurl_preprocess_page(&$vars) {
 
 /**
  * Generate the debug markup.
+ *
+ * @param array $vars
+ *   The Drupal theme variables available in hook_preprocess_page().
+ *
+ * @return string
+ *   A string of HTML markup to append to render()ed page content.
  */
 function revengurl_generate_debug_markup($vars) {
   $markup = '';
@@ -76,6 +82,14 @@ function revengurl_generate_debug_markup($vars) {
 
 /**
  * Generate the debug markup for the Drupal content type.
+ *
+ * @param string $markup_item_id
+ *   Eventual output tag 'data-name' attribute value.
+ * @param array $vars
+ *   The Drupal theme variables available in hook_preprocess_page().
+ *
+ * @return string
+ *   String of HTML markup for the 'content_type' debug tag.
  */
 function revengurl_content_type_markup($markup_item_id, $vars) {
   $markup_item_value = 'CONTENT_TYPE_UNKNOWN';
@@ -108,6 +122,14 @@ function revengurl_content_type_markup($markup_item_id, $vars) {
 
 /**
  * Generate the debug markup for the Drupal node ID.
+ *
+ * @param string $markup_item_id
+ *   Eventual output tag 'data-name' attribute value.
+ * @param array $vars
+ *   The Drupal theme variables available in hook_preprocess_page().
+ *
+ * @return string
+ *   String of HTML markup for the 'node_id' debug tag.
  */
 function revengurl_node_id_markup($markup_item_id, $vars) {
   $markup_item_value = 0;
@@ -121,6 +143,14 @@ function revengurl_node_id_markup($markup_item_id, $vars) {
 
 /**
  * Generate the debug markup for the Drupal node URL.
+ *
+ * @param string $markup_item_id
+ *   Eventual output tag 'data-name' attribute value.
+ * @param array $vars
+ *   The Drupal theme variables available in hook_preprocess_page().
+ *
+ * @return string
+ *   String of HTML markup for the 'node_url' debug tag.
  */
 function revengurl_node_url_markup($markup_item_id, $vars) {
   $markup_item_value = '';
@@ -137,6 +167,14 @@ function revengurl_node_url_markup($markup_item_id, $vars) {
 
 /**
  * Generate the debug markup for the current partial URI.
+ *
+ * @param string $markup_item_id
+ *   Eventual output tag 'data-name' attribute value.
+ * @param array $vars
+ *   The Drupal theme variables available in hook_preprocess_page().
+ *
+ * @return string
+ *   String of HTML markup for the 'uri' debug tag.
  */
 function revengurl_uri_markup($markup_item_id, $vars) {
   $markup_item_value = request_uri();
@@ -146,6 +184,14 @@ function revengurl_uri_markup($markup_item_id, $vars) {
 
 /**
  * Generate the debug markup for the current absolute URI.
+ *
+ * @param string $markup_item_id
+ *   Eventual output tag 'data-name' attribute value.
+ * @param array $vars
+ *   The Drupal theme variables available in hook_preprocess_page().
+ *
+ * @return string
+ *   String of HTML markup for the 'absolute_uri' debug tag.
  */
 function revengurl_absolute_uri_markup($markup_item_id, $vars) {
   $path = isset($_GET['q']) ? $_GET['q'] : '<front>';
@@ -156,6 +202,14 @@ function revengurl_absolute_uri_markup($markup_item_id, $vars) {
 
 /**
  * Generate a single piece of debug markup.
+ *
+ * @param string $markup_item_id
+ *   Value to use for the debug tag 'data-name' attribute value.
+ * @param string $markup_item_value
+ *   Value to use for the debug tag 'data-name' attribute value.
+ *
+ * @return string
+ *   String of markup representing a particular debug tag.
  */
 function revengurl_tag_markup($markup_item_id, $markup_item_value) {
   return '<div class="debug-data-item" data-name="' . $markup_item_id . '" data-value="' . $markup_item_value . '"></div>';

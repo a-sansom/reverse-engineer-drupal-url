@@ -20,6 +20,8 @@
  * it is printed as a JSON string listing all of the .tpl.php files that make
  * up the page.
  */
+
+// Define module constants.
 define('REVENGURL_UNKNOWN_CONTENT_TYPE', 'CONTENT_TYPE_UNKNOWN');
 define('REVENGURL_UNKNOWN_TEMPLATE', 'TEMPLATE_UNKNOWN');
 
@@ -52,10 +54,19 @@ function revengurl_process_page(&$vars) {
 
 /**
  * Generate the debug markup.
+ *
+ * @param array $vars
+ *   The Drupal theme variables available in hook_process_html().
+ *
+ * @return string
+ *   A string of HTML markup to append to render()ed page content.
  */
 function revengurl_generate_debug_markup($vars) {
   $markup = '';
 
+  // If we want further debug properties output, add the property name to this
+  // array and a function named 'revengurl_NEW_PROPERTY_NAME_markup' that will
+  // take care of defining the property value, to the module.
   $ids = array(
     'content_type',
     'node_id',
@@ -80,14 +91,28 @@ function revengurl_generate_debug_markup($vars) {
 }
 
 /**
- * Filter for empty array values.
+ * Custom array_filter() callback to identify empty array values.
+ *
+ * @param string $value
+ *   Possibly empty string array value to test.
+ *
+ * @return bool
+ *   Returns TRUE to indicate the value should be kept, FALSE otherwise.
  */
-function revengurl_filter_is_empty($value) {
+function revengurl_filter_keep_value($value) {
   return !empty($value);
 }
 
 /**
  * Generate the debug markup for the Drupal content type.
+ *
+ * @param string $markup_item_id
+ *   Eventual output tag 'data-name' attribute value.
+ * @param array $vars
+ *   The Drupal theme variables available in hook_process_html().
+ *
+ * @return string
+ *   String of HTML markup for the 'content_type' debug tag.
  */
 function revengurl_content_type_markup($markup_item_id, $vars) {
   $markup_item_value = REVENGURL_UNKNOWN_CONTENT_TYPE;
@@ -120,6 +145,14 @@ function revengurl_content_type_markup($markup_item_id, $vars) {
 
 /**
  * Generate the debug markup for the Drupal node ID.
+ *
+ * @param string $markup_item_id
+ *   Eventual output tag 'data-name' attribute value.
+ * @param array $vars
+ *   The Drupal theme variables available in hook_process_html().
+ *
+ * @return string
+ *   String of HTML markup for the 'node_id' debug tag.
  */
 function revengurl_node_id_markup($markup_item_id, $vars) {
   $markup_item_value = 0;
@@ -133,6 +166,14 @@ function revengurl_node_id_markup($markup_item_id, $vars) {
 
 /**
  * Generate the debug markup for the Drupal node URL.
+ *
+ * @param string $markup_item_id
+ *   Eventual output tag 'data-name' attribute value.
+ * @param array $vars
+ *   The Drupal theme variables available in hook_process_html().
+ *
+ * @return string
+ *   String of HTML markup for the 'node_url' debug tag.
  */
 function revengurl_node_url_markup($markup_item_id, $vars) {
   $markup_item_value = '';
@@ -149,6 +190,14 @@ function revengurl_node_url_markup($markup_item_id, $vars) {
 
 /**
  * Generate the debug markup for the current partial URI.
+ *
+ * @param string $markup_item_id
+ *   Eventual output tag 'data-name' attribute value.
+ * @param array $vars
+ *   The Drupal theme variables available in hook_process_html().
+ *
+ * @return string
+ *   String of HTML markup for the 'uri' debug tag.
  */
 function revengurl_uri_markup($markup_item_id, $vars) {
   $markup_item_value = request_uri();
@@ -158,6 +207,14 @@ function revengurl_uri_markup($markup_item_id, $vars) {
 
 /**
  * Generate the debug markup for the current absolute URI.
+ *
+ * @param string $markup_item_id
+ *   Eventual output tag 'data-name' attribute value.
+ * @param array $vars
+ *   The Drupal theme variables available in hook_process_html().
+ *
+ * @return string
+ *   String of HTML markup for the 'absolute_uri' debug tag.
  */
 function revengurl_absolute_uri_markup($markup_item_id, $vars) {
   $path = isset($_GET['q']) ? $_GET['q'] : '<front>';
@@ -171,6 +228,14 @@ function revengurl_absolute_uri_markup($markup_item_id, $vars) {
  *
  * Use the 'theme_debug' output to generate debug info about templates used for
  * the *page* generation.
+ *
+ * @param string $markup_item_id
+ *   Eventual output tag 'data-name' attribute value.
+ * @param array $vars
+ *   The Drupal theme variables available in hook_process_html().
+ *
+ * @return string
+ *   String of HTML markup for the 'template' debug tag.
  */
 function revengurl_template_markup($markup_item_id, $vars) {
   $markup_item_value = REVENGURL_UNKNOWN_TEMPLATE;
@@ -185,7 +250,7 @@ function revengurl_template_markup($markup_item_id, $vars) {
 
       // Filter out the empty array items (the regex matches flip-flop)
       for ($i = 0, $len = count($matches); $i < $len; $i++) {
-        $matches[$i] = array_values(array_filter($matches[$i], 'revengurl_filter_is_empty'));
+        $matches[$i] = array_values(array_filter($matches[$i], 'revengurl_filter_keep_value'));
       }
 
       // Collate the template info.
@@ -219,6 +284,14 @@ function revengurl_template_markup($markup_item_id, $vars) {
 
 /**
  * Generate a single piece of debug markup.
+ *
+ * @param string $markup_item_id
+ *   Value to use for the debug tag 'data-name' attribute value.
+ * @param string $markup_item_value
+ *   Value to use for the debug tag 'data-name' attribute value.
+ *
+ * @return string
+ *   String of markup representing a particular debug tag.
  */
 function revengurl_tag_markup($markup_item_id, $markup_item_value) {
   return '<div class="debug-data-item" data-name="' . $markup_item_id . '" data-value="' . $markup_item_value . '"></div>';
