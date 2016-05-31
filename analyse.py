@@ -124,7 +124,7 @@ class WgetPageReader:
 
         if not os.path.exists(path):
             raise Exception(
-                'Path to downloaded pages "{}" does not exist'.format(path)
+                'Path to downloaded pages "{0}" does not exist'.format(path)
             )
 
         nodes = glob.iglob(path + '/*')
@@ -138,7 +138,7 @@ class WgetPageReader:
 
         if not os.path.exists(path):
             raise Exception(
-                'Path to output CSV "{}" does not exist'.format(path)
+                'Path to output CSV "{0}" does not exist'.format(path)
             )
 
         with open(path + '/nodes.csv', 'a') as csvfile:
@@ -163,7 +163,7 @@ class WgetPageReader:
             # If we're dealing with some kind of special case, highlight it
             # and we'll need to analyse for a bit more info.
             if node['content_type'] == 'UNKNOWN':
-                print "'UNKNOWN' content type: {} ({})".format(
+                print "'UNKNOWN' content type: {0} ({1})".format(
                     node['file'], node['absolute_uri']
                 )
 
@@ -175,7 +175,7 @@ class WgetPageReader:
             print '{0:50}: {1}'.format(content_type, count)
 
         print '{0:50}: {1}'.format('Total pages', page_count)
-        print 'See output CSV in {}'.format(self.csv_output_path())
+        print 'See output CSV in {0}'.format(self.csv_output_path())
 
 if __name__ == "__main__":
     """ Retrieve debug info from wget downloaded pages into a CSV file.
