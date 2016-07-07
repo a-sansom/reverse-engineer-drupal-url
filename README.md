@@ -6,9 +6,9 @@ Outline of how to reverse engineer Drupal pages, to get information about node I
 
 * Use the `urls.csv` file as input to the `visit_pages.sh` bash script, to use wget to visit, generate and download each file with embedded debug info
 
-* Run `analyse.py YYYYMMDD HHMMSS` to process the downloaded page debug information into a `nodes.csv` file for any further analysis/processing
+* Run `analyse.py YYYYMMDD HHMMSS` (or `analyse.rb YYYYMMDD HHMMSS`) to process the downloaded page debug information into a `nodes.csv` file for any further analysis/processing
 
-`analyse.py` example output (along with `nodes.csv` in the directory noted below):
+`analyse.py`/`analyse.rb` example output (along with `nodes.csv` in the directory noted below):
 
 ```
 article                                           : 56
